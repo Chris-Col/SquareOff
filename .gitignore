@@ -1,0 +1,16 @@
+# Gradle
+.gradle/
+build/
+bin/
+
+# IDE
+.vscode/
+.idea/
+*.iml
+.metals/
+.bloop/
+.bsp/
+
+# OS
+Thumbs.db
+.DS_Store
