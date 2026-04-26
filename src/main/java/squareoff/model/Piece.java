@@ -17,30 +17,35 @@ public abstract class Piece {
 
     public final List<Move> getValidMoves(Board board, int row, int col) {
         List<Move> moves = new ArrayList<>();
-        for (int[] dir : getMoveDirections()) {
-            int dRow = dir[0];
-            int dCol = dir[1];
-
-            int newRow = row + dRow;
-            int newCol = col + dCol;
-
-            if (board.isInBounds(newRow, newCol) && board.isEmpty(newRow, newCol)) {
-                moves.add(new Move(row, col, newRow, newCol, false));
-            }
-
-            int jumpRow = row + 2 * dRow;
-            int jumpCol = col + 2 * dCol;
-
-            if (board.isInBounds(jumpRow, jumpCol) && board.isEmpty(jumpRow, jumpCol)
-                    && board.isInBounds(newRow, newCol)
-                    && board.hasPieceOfColor(newRow, newCol, color.opposite())) {
-                moves.add(new Move(row, col, jumpRow, jumpCol, true));
-            }
+        for (Direction dir : getMoveDirections()) {
+            addStepMoveIfLegal(board, row, col, dir, moves);
+            addCaptureMoveIfLegal(board, row, col, dir, moves);
         }
         return List.copyOf(moves);
     }
 
-    protected abstract int[][] getMoveDirections();
+    private void addStepMoveIfLegal(Board board, int row, int col, Direction dir, List<Move> moves) {
+        int newRow = dir.stepRow(row);
+        int newCol = dir.stepCol(col);
+        if (board.isInBounds(newRow, newCol) && board.isEmpty(newRow, newCol)) {
+            moves.add(new Move(row, col, newRow, newCol, false));
+        }
+    }
+
+    private void addCaptureMoveIfLegal(Board board, int row, int col, Direction dir, List<Move> moves) {
+        int adjacentRow = dir.stepRow(row);
+        int adjacentCol = dir.stepCol(col);
+        int landingRow = dir.jumpRow(row);
+        int landingCol = dir.jumpCol(col);
+        if (board.isInBounds(landingRow, landingCol)
+                && board.isEmpty(landingRow, landingCol)
+                && board.isInBounds(adjacentRow, adjacentCol)
+                && board.hasPieceOfColor(adjacentRow, adjacentCol, color.opposite())) {
+            moves.add(new Move(row, col, landingRow, landingCol, true));
+        }
+    }
+
+    protected abstract List<Direction> getMoveDirections();
 
     public abstract boolean isKing();
 

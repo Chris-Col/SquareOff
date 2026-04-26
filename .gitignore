@@ -2,14 +2,39 @@
 .gradle/
 build/
 bin/
+out/
+!gradle-wrapper.jar
 
-# IDE
+# Compiled Java
+*.class
+
+# IDE — VS Code / IntelliJ / Eclipse / Metals
 .vscode/
 .idea/
 *.iml
 .metals/
 .bloop/
 .bsp/
+.classpath
+.project
+.settings/
+.factorypath
+
+
+# Logs
+*.log
+logs/
+
+# JaCoCo coverage data (HTML report lives under build/, ignored above)
+*.exec
+
+# JVM crash / replay dumps
+hs_err_pid*
+replay_pid*
+
+# Editor backups
+*.swp
+*~
 
 # OS
 Thumbs.db

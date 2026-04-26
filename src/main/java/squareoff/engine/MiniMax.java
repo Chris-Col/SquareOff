@@ -10,6 +10,9 @@ import java.util.List;
 
 public class MiniMax {
 
+    private static final int REGULAR_PIECE_VALUE = 1;
+    private static final int KING_PIECE_VALUE = 3;
+
     private final int maxDepth;
 
     public MiniMax(int maxDepth) {
@@ -40,70 +43,70 @@ public class MiniMax {
     private int minimax(Board board, int depth, int alpha, int beta, boolean maximizing, PieceColor aiColor) {
         PieceColor currentColor = maximizing ? aiColor : aiColor.opposite();
         List<Move> moves = getAllMovesForColor(board, currentColor);
-
         if (depth == 0 || moves.isEmpty()) {
             return evaluate(board, aiColor);
         }
+        return maximizing
+                ? maximize(board, depth, alpha, beta, aiColor, moves)
+                : minimize(board, depth, alpha, beta, aiColor, moves);
+    }
 
-        if (maximizing) {
-            int maxEval = Integer.MIN_VALUE;
-            for (Move move : moves) {
-                Board copy = board.copy();
-                copy.executeMove(move);
-                int eval = minimax(copy, depth - 1, alpha, beta, false, aiColor);
-                maxEval = Math.max(maxEval, eval);
-                alpha = Math.max(alpha, eval);
-                if (alpha >= beta) {
-                    break;
-                }
+    private int maximize(Board board, int depth, int alpha, int beta, PieceColor aiColor, List<Move> moves) {
+        int maxEval = Integer.MIN_VALUE;
+        for (Move move : moves) {
+            Board copy = board.copy();
+            copy.executeMove(move);
+            int eval = minimax(copy, depth - 1, alpha, beta, false, aiColor);
+            maxEval = Math.max(maxEval, eval);
+            alpha = Math.max(alpha, eval);
+            if (alpha >= beta) {
+                break;
             }
-            return maxEval;
-        } else {
-            int minEval = Integer.MAX_VALUE;
-            for (Move move : moves) {
-                Board copy = board.copy();
-                copy.executeMove(move);
-                int eval = minimax(copy, depth - 1, alpha, beta, true, aiColor);
-                minEval = Math.min(minEval, eval);
-                beta = Math.min(beta, eval);
-                if (beta <= alpha) {
-                    break;
-                }
-            }
-            return minEval;
         }
+        return maxEval;
+    }
+
+    private int minimize(Board board, int depth, int alpha, int beta, PieceColor aiColor, List<Move> moves) {
+        int minEval = Integer.MAX_VALUE;
+        for (Move move : moves) {
+            Board copy = board.copy();
+            copy.executeMove(move);
+            int eval = minimax(copy, depth - 1, alpha, beta, true, aiColor);
+            minEval = Math.min(minEval, eval);
+            beta = Math.min(beta, eval);
+            if (beta <= alpha) {
+                break;
+            }
+        }
+        return minEval;
     }
 
     private List<Move> getAllMovesForColor(Board board, PieceColor color) {
-        List<Move> allMoves = new ArrayList<>();
-        boolean hasCapture = false;
+        List<Move> allMoves = collectMoves(board, color);
+        List<Move> captures = filterCaptures(allMoves);
+        return captures.isEmpty() ? allMoves : captures;
+    }
 
+    private List<Move> collectMoves(Board board, PieceColor color) {
+        List<Move> allMoves = new ArrayList<>();
         for (int r = 0; r < board.getSize(); r++) {
             for (int c = 0; c < board.getSize(); c++) {
                 if (board.hasPieceOfColor(r, c, color)) {
-                    Piece piece = board.getPiece(r, c);
-                    List<Move> pieceMoves = piece.getValidMoves(board, r, c);
-                    for (Move move : pieceMoves) {
-                        if (move.isCapture()) {
-                            hasCapture = true;
-                        }
-                        allMoves.add(move);
-                    }
+                    allMoves.addAll(board.getPiece(r, c).getValidMoves(board, r, c));
                 }
             }
         }
-
-        if (hasCapture) {
-            List<Move> captures = new ArrayList<>();
-            for (Move move : allMoves) {
-                if (move.isCapture()) {
-                    captures.add(move);
-                }
-            }
-            return captures;
-        }
-
         return allMoves;
+    }
+
+    private List<Move> filterCaptures(List<Move> moves) {
+        List<Move> captures = new ArrayList<>();
+        for (Move move : moves) {
+            if (move.isCapture()) {
+                captures.add(move);
+            }
+        }
+        return captures;
     }
 
     int evaluate(Board board, PieceColor color) {
@@ -115,9 +118,9 @@ public class MiniMax {
                 Piece piece = board.getPiece(r, c);
                 if (piece != null) {
                     if (piece.getColor() == color) {
-                        score += piece.isKing() ? 3 : 1;
+                        score += piece.isKing() ? KING_PIECE_VALUE : REGULAR_PIECE_VALUE;
                     } else if (piece.getColor() == opponent) {
-                        score -= piece.isKing() ? 3 : 1;
+                        score -= piece.isKing() ? KING_PIECE_VALUE : REGULAR_PIECE_VALUE;
                     }
                 }
             }

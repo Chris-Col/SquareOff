@@ -1,68 +1,75 @@
 # SquareOff
 
-A checkers game built in Java with an AI opponent powered by minimax with alpha-beta pruning.
+**Author:** Chris Coleman
+**Java version:** 25
+
+A JavaFX checkers game with an AI opponent using minimax with alpha-beta pruning. 
 
 ## Overview
 
-SquareOff implements standard American checkers rules including forced captures and king promotion. The AI opponent evaluates moves using the minimax algorithm to play competitively. The project emphasizes clean object-oriented design with multiple design patterns.
+SquareOff implements standard American checkers rules: 8×8 board, 12 pieces per side on dark squares, regular pieces move forward only, kings move in all four diagonal directions, captures are forced, and reaching the opposite back rank promotes a piece to king.
+
+The opponent uses a minimax search with alpha-beta pruning and a piece-count + king-bonus evaluation. The human chooses color and difficulty (Random / Easy / Hard) at startup.
+
+## How to run
+
+./gradlew run               
+./gradlew test                 
+
 
 ## Design Patterns
 
 ### 1. Strategy Pattern
 
-**Where:** `squareoff.strategy` and `squareoff.player.AIPlayer`
+**Where:** squareoff.strategy and squareoff.player.AIPlayer
 
-**How:** The `MoveStrategy` interface declares a single method `selectMove(Board, PieceColor, List<Move>)`. Concrete implementations like `RandomStrategy` provide different algorithms for choosing a move. `AIPlayer` receives a `MoveStrategy` through its constructor (dependency injection) and delegates move selection to it in `chooseMove()`.
+The MoveStrategy interface declares a single method selectMove(Board, PieceColor, List<Move>). Three concrete implementations provide different algorithms for choosing a move:
 
-**Why:** The Strategy pattern decouples the AI player from any specific move-selection algorithm. New strategies (e.g., defensive, aggressive, or MiniMax-backed) can be added by implementing `MoveStrategy` without modifying `AIPlayer`. This makes AI behavior pluggable and testable in isolation.
+- RandomStrategy - picks a random legal move (beginner difficulty).
+- MiniMaxStrategy - wraps the MiniMax engine, parameterized by a Difficulty enum (EASY = 2 plies, HARD = 5 plies).
+
+AIPlayer receives a MoveStrategy through its constructor (dependency injection) and delegates move selection to it. Adding a new AI behavior means adding a new MoveStrategy implementation no changes to AIPlayer or GameEngine.
 
 ### 2. Template Method Pattern
 
-**Where:** `squareoff.model.Piece`, `RegularPiece`, and `KingPiece`
+**Where:** squareoff.model.Piece, RegularPiece, and KingPiece
 
-**How:** The abstract `Piece` class defines `getValidMoves(Board, int, int)` as a `final` method that contains the shared algorithm for generating moves and captures. It calls the abstract hook method `getMoveDirections()`, which subclasses override. `RegularPiece` returns only forward directions (based on color), while `KingPiece` returns all four diagonal directions.
+The abstract Piece class defines getValidMoves(Board, int, int) as a final method that contains the shared algorithm for generating moves and captures. It calls the abstract hook getMoveDirections(), which subclasses override:
 
-**Why:** The move-generation logic (checking bounds, detecting empty squares, detecting opponent pieces for captures) is identical for both piece types. The Template Method pattern avoids duplicating this algorithm in each subclass. Only the part that varies (which directions to check) is deferred to subclasses.
+- RegularPiece returns only forward directions (depending on color).
+- KingPiece returns all four diagonal directions.
+
+The move-generation algorithm (bounds checks, empty-square detection, capture detection) lives in one place. Only the part that varies which directions to check is deferred to subclasses.
 
 ### 3. Observer Pattern
 
-**Where:** `squareoff.observer` and `squareoff.engine.GameEngine`
+**Where:** squareoff.observer and squareoff.engine.GameEngine
 
-**How:** The `GameObserver` interface declares three event methods: `onMoveMade`, `onKingPromotion`, and `onGameOver`. `GameEngine` maintains a list of observers and notifies all of them when these events occur during `playTurn()`. `GameLogger` is a concrete observer that logs game events via SLF4J.
+GameObserver declares three event methods: onMoveMade, onKingPromotion, and onGameOver. GameEngine keeps a list of observers and notifies all of them during playTurn(). Two concrete observers exist:
 
-**Why:** The Observer pattern decouples the game engine from any specific form of output or reaction to game events. The engine does not need to know whether its events are being logged to the console, displayed in a GUI, sent over a network, or recorded for replay. New observers can be added without changing the engine.
+- GameLogger - logs game events via SLF4J.
+- GameController (the JavaFX UI) - repaints the board after every move.
 
-## Tech Stack
+The engine is decoupled from any specific output mechanism: console logging, GUI updates, network broadcasting, or replay recording can all coexist without engine changes.
 
-- **Language:** Java 25
-- **Build Tool:** Gradle 8.12
-- **Testing:** JUnit 5
-- **Logging:** SLF4J / Logback
-- **Coverage:** JaCoCo
+### 4. Factory Method Pattern
 
-## Getting Started
+**Where:** squareoff.model.PieceFactory
 
-### Prerequisites
+PieceFactory exposes two static factory methods createRegular(PieceColor) and createKing(PieceColor)  that hide concrete RegularPiece and KingPiece constructors from the rest of the codebase. Board.executeMove calls PieceFactory.createKing when promoting a piece, and Board.copy calls the factory when cloning the board for minimax search. If a new piece variant were ever introduced, only the factory would need to change and call sites remain unaware of concrete classes.
 
-- Java 25+
-- Gradle 8.x+
 
-### Build & Test
 
-```bash
-./gradlew build
-./gradlew test
-./gradlew jacocoTestReport
-```
+### Coverage screenshot
 
-## Tests
+![coverage report](Screenshot%202026-04-25%20203602.png)
 
-8 tests covering:
+## Assumptions
 
-- Board initial setup and king promotion
-- Regular piece forward movement
-- King piece 4-directional movement
-- Forced capture rule enforcement
-- Capture removes opponent piece
-- MiniMax selects capture moves
-- AI player strategy injection
+- American checkers rules. 8×8 board, 12 pieces per side, dark-square play, regular pieces move forward only, captures are mandatory.
+- No multi-jump chaining. A capture is a single jump; chained jumps in one turn are not implemented.
+- Red moves first.
+- Game ends when the player to move has no legal moves; the opponent is declared winner.
+
+
+

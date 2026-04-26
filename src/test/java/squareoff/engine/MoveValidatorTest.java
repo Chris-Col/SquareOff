@@ -61,4 +61,30 @@ class MoveValidatorTest {
         assertNull(board.getPiece(3, 2), "Source square should be empty");
         assertNotNull(board.getPiece(5, 4), "Piece should be at destination");
     }
+
+    @Test
+    void testGetValidMovesAtStartHasMoves() {
+        Board board = new Board();
+        MoveValidator validator = new MoveValidator();
+        List<Move> moves = validator.getValidMoves(board, PieceColor.RED);
+        assertFalse(moves.isEmpty(), "Initial board should have available RED moves");
+    }
+
+    @Test
+    void testGetCaptureMovesEmptyWhenNoneAvailable() {
+        Board board = new Board();
+        MoveValidator validator = new MoveValidator();
+        List<Move> captures = validator.getCaptureMoves(board, PieceColor.RED);
+        assertTrue(captures.isEmpty(), "No captures available at game start");
+    }
+
+    @Test
+    void testGetAvailableMovesFallsBackToRegularMoves() {
+        Board board = new Board();
+        MoveValidator validator = new MoveValidator();
+        List<Move> moves = validator.getAvailableMoves(board, PieceColor.RED);
+        for (Move m : moves) {
+            assertFalse(m.isCapture(), "No captures expected at game start");
+        }
+    }
 }

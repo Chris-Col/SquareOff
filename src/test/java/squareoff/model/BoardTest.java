@@ -55,4 +55,74 @@ class BoardTest {
         assertTrue(promoted.isKing(), "Piece should be promoted to king");
         assertEquals(PieceColor.RED, promoted.getColor(), "Promoted piece should still be RED");
     }
+
+    @Test
+    void testIsInBoundsBoundaries() {
+        Board board = new Board();
+        assertTrue(board.isInBounds(0, 0));
+        assertTrue(board.isInBounds(7, 7));
+        assertFalse(board.isInBounds(-1, 0));
+        assertFalse(board.isInBounds(0, -1));
+        assertFalse(board.isInBounds(8, 0));
+        assertFalse(board.isInBounds(0, 8));
+    }
+
+    @Test
+    void testHasPieceOfColorOutOfBoundsIsFalse() {
+        Board board = new Board();
+        assertFalse(board.hasPieceOfColor(-1, 0, PieceColor.RED));
+        assertFalse(board.hasPieceOfColor(0, 8, PieceColor.RED));
+    }
+
+    @Test
+    void testGetPieceOutOfBoundsIsNull() {
+        Board board = new Board();
+        assertNull(board.getPiece(-1, -1));
+        assertNull(board.getPiece(8, 0));
+    }
+
+    @Test
+    void testCopyIsIndependent() {
+        Board board = new Board();
+        Board copy = board.copy();
+        copy.getTile(2, 1).clear();
+        assertNotNull(board.getPiece(2, 1), "Original should be unchanged after mutating copy");
+        assertNull(copy.getPiece(2, 1), "Copy should reflect mutation");
+    }
+
+    @Test
+    void testCopyPreservesKings() {
+        Board board = new Board();
+        for (int r = 0; r < board.getSize(); r++) {
+            for (int c = 0; c < board.getSize(); c++) {
+                board.getTile(r, c).clear();
+            }
+        }
+        board.getTile(3, 2).setPiece(new KingPiece(PieceColor.RED));
+        Board copy = board.copy();
+        Piece copied = copy.getPiece(3, 2);
+        assertNotNull(copied);
+        assertTrue(copied.isKing(), "Kings should remain kings in the copy");
+    }
+
+    @Test
+    void testToStringIsNonEmpty() {
+        Board board = new Board();
+        String text = board.toString();
+        assertNotNull(text);
+        assertFalse(text.isEmpty());
+        assertTrue(text.contains("r") || text.contains("b"),
+                "toString should render piece glyphs");
+    }
+
+    @Test
+    void testIsEmptyOutOfBoundsIsFalse() {
+        Board board = new Board();
+        assertFalse(board.isEmpty(-1, 0));
+    }
+
+    @Test
+    void testGetSizeIsEight() {
+        assertEquals(8, new Board().getSize());
+    }
 }

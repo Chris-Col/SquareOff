@@ -28,4 +28,10 @@ class AIPlayerTest {
         assertNotNull(chosen, "AIPlayer should return a move");
         assertTrue(validMoves.contains(chosen), "Chosen move should be one of the valid moves");
     }
+
+    @Test
+    void testGetColorReturnsConstructorColor() {
+        AIPlayer player = new AIPlayer(PieceColor.BLACK, new RandomStrategy());
+        assertEquals(PieceColor.BLACK, player.getColor());
+    }
 }

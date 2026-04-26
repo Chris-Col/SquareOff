@@ -3,6 +3,10 @@ package squareoff.model;
 public class Board {
 
     private static final int SIZE = 8;
+    private static final int STARTING_PIECE_ROWS_PER_SIDE = 3;
+    private static final int RED_FRONT_ROW = STARTING_PIECE_ROWS_PER_SIDE - 1;
+    private static final int BLACK_FRONT_ROW = SIZE - STARTING_PIECE_ROWS_PER_SIDE;
+
     private final Tile[][] tiles;
 
     public Board() {
@@ -12,13 +16,17 @@ public class Board {
                 boolean playable = (r + c) % 2 != 0;
                 tiles[r][c] = new Tile(playable);
                 if (playable) {
-                    if (r <= 2) {
-                        tiles[r][c].setPiece(PieceFactory.createRegular(PieceColor.RED));
-                    } else if (r >= 5) {
-                        tiles[r][c].setPiece(PieceFactory.createRegular(PieceColor.BLACK));
-                    }
+                    placeStartingPiece(r, c);
                 }
             }
+        }
+    }
+
+    private void placeStartingPiece(int r, int c) {
+        if (r <= RED_FRONT_ROW) {
+            tiles[r][c].setPiece(PieceFactory.createRegular(PieceColor.RED));
+        } else if (r >= BLACK_FRONT_ROW) {
+            tiles[r][c].setPiece(PieceFactory.createRegular(PieceColor.BLACK));
         }
     }
 
